@@ -1,0 +1,46 @@
+// Prisma Schema for URL Shortener
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model URL {
+  id            Int      @id @default(autoincrement())
+  originalUrl   String   @db.Text
+  shortCode     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clicks        Click[]  @relation("UrlClicks")
+  
+  @@index([shortCode])
+  @@index([createdAt])
+}
+
+model Click {
+  id          Int      @id @default(autoincrement())
+  urlId       Int
+  url         URL      @relation("UrlClicks", fields: [urlId], references: [id])
+  timestamp   DateTime @default(now())
+  referrer    String?
+  userAgent   String?
+  country     String?
+  device      String?
+  
+  @@index([urlId, timestamp])
+  @@index([timestamp])
+}
+
+// For user management in future (optional)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  urls      URL[]    @relation("UserUrls")
+  
+  @@index([email])
+}
